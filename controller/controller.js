@@ -345,20 +345,21 @@ exports.makeAdmin = async (req, res) => {
 
         
         
-       exports. deleteUser= async (req,res)=>{
-        try {
-          const userID= req.params.userId
-          const user= await expenseModel.findById(userID)
-          if(!user){
-            return res.status(404).json({message:` this user cannot deleted`})
-          }
-          const deleted= await expenseModel.findByIdAndDelete(user)
-        
-          return res.status(200).json({message:`user has been deleted`, deleted})
-          
-        
-        } catch (error) {
-          res.send(error.message)
-        }
-        }
+exports.deleteUser = async (req, res) => {
+  try {
+    const userID = req.params.id;
+    const user = await expenseModel.findById(userID);
+
+    if (!user) {
+      return res.status(404).json({ message: `This user cannot be deleted` });
+    }
+
+    const deletedUser = await expenseModel.findByIdAndDelete(userID);
+
+    return res.status(200).json({ message: `User has been deleted`, deletedUser });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
         
