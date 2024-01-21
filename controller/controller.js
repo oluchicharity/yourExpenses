@@ -44,22 +44,22 @@ const hashedPassword = await bcrypt.hash(password, salt);
     );
 
     // Upload profile picture to Cloudinary
-    const profilepicture = req.files && req.files.profilepicture;
-    if (!profilepicture || !profilepicture.tempFilePath) {
-      return res.status(400).json({
-        message: "Profile picture is missing or invalid",
-      });
-    }
+    // const profilepicture = req.files && req.files.profilepicture;
+    // if (!profilepicture || !profilepicture.tempFilePath) {
+    //   return res.status(400).json({
+    //     message: "Profile picture is missing or invalid",
+    //   });
+    // }
 
-    let fileUploader;
-    try {
-      fileUploader = await cloudinary.uploader.upload(profilepicture.tempFilePath);
-    } catch (error) {
-      console.error("Error uploading profile picture to Cloudinary:", error);
-      return res.status(500).json({
-        message: "Error uploading profile picture to Cloudinary",
-      });
-    }
+    // let fileUploader;
+    // try {
+    //   fileUploader = await cloudinary.uploader.upload(profilepicture.tempFilePath);
+    // } catch (error) {
+    //   console.error("Error uploading profile picture to Cloudinary:", error);
+    //   return res.status(500).json({
+    //     message: "Error uploading profile picture to Cloudinary",
+    //   });
+    
 
     // Create a new user instance
     const newUser = new expenseModel({
@@ -67,10 +67,10 @@ const hashedPassword = await bcrypt.hash(password, salt);
       Firstname,
       email: email.toLowerCase(),
       password: hashedPassword,
-      profilepicture: {
-        public_id: fileUploader.public_id,
-        url: fileUploader.secure_url
-      }
+      // profilepicture: {
+      //   public_id: fileUploader.public_id,
+      //   url: fileUploader.secure_url
+      // }
     });
 
     // Save the new user to the database

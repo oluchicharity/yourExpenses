@@ -51,16 +51,16 @@ const expenseSchema= new mongoose.Schema({
     token:{
         type:String
         
-    },
-    profilepicture:{
-        public_id:{
-            type:String,
-            required:false
-        },
-        url:{
-            type:String,
-            required:true
-        },
+    // },
+    // profilepicture:{
+    //     public_id:{
+    //         type:String,
+    //         required:false
+    //     },
+    //     url:{
+    //         type:String,
+    //         required:false
+    //     },
     }
     
 
