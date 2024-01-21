@@ -10,7 +10,7 @@ const auth = async (req, res, next) => {
             return res.status(401).json({ error: 'Authorization header missing' });
         }
 
-        const token = authorizationHeader.split(" ")[1];
+        const token = authorizationHeader.split(" ")[1]; 
 
         try {
             const decodedToken = jwt.verify(token, process.env.SECRET);

@@ -299,6 +299,81 @@ exports.category = async (req, res) => {
       res.status(500).json(error.message);
   }
 };
+ 
+
+exports.totalExpense= async (req,res)=>{
+  try {
+    const userId = req.params.id;
+
+    const user= await expenseModel.findById(userId)
+
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const totalExpense = user.expenses.reduce((total, expense) => total + expense.amount, 0);
+
+    return res.status(200).json({ userId: user.id, totalExpense });
+  } catch (error) {
+    console.error('Error calculating total expenses:', error);
+    return res.status(500).json(error.message);
+  }
+};
+
+// exports.deleteCategory = async (req, res) => {
+//   try {
+//     const userId = req.params.id;
+//     let categoryToDelete = req.params.category;
+
+//     // Validate if categoryToDelete is present
+//     if (!categoryToDelete) {
+//       return res.status(400).json({ error: 'Category parameter is missing' });
+//     }
+
+//     // Assume you have a function to fetch users from your database
+//     const users = await expenseModel.find();
+
+//     // Find the user by their ID
+//     const user = users.find((user) => user.id === userId);
+
+//     if (!user) {
+//       return res.status(404).json({ error: 'User not found' });
+//     }
+
+//     // Check if the user has an "expenses" array
+//     if (!user.expenses || !Array.isArray(user.expenses)) {
+//       return res.status(404).json({ error: 'Expense array not found' });
+//     }
+
+//     // Convert categoryToDelete to lowercase for case-insensitive comparison
+//     categoryToDelete = categoryToDelete.toLowerCase();
+
+//     // Find the index of the category to delete
+//     const categoryIndex = user.expenses.findIndex(
+//       (expense) => expense.category.toLowerCase() === categoryToDelete
+//     );
+
+//     // Check if the category was not found
+//     if (categoryIndex === -1) {
+//       return res.status(404).json({ error: 'Category not found in expenses array' });
+//     }
+
+//     // Remove the category from the "expenses" array
+//     user.expenses.splice(categoryIndex, 1);
+
+//     // Save the updated user back to the database
+//     await user.save();
+
+//     return res.status(200).json({ userId: user.id, updatedExpenses: user.expenses });
+//   } catch (error) {
+//     console.error('Error deleting category:', error.message);
+//     return res.status(500).json({ error: error.message });
+//   }
+// };
+
+
+
 
 // Get expenses grouped by category for a user
 exports.getCategory= async (req, res) => {
