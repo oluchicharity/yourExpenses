@@ -11,6 +11,9 @@ app.use(fileUpload({
 }))
 app.use(express.json())
 app.use(cors())
+app.get("/",(req,res)=>{
+res.send('welcome to Expense tracker')
+})
 app.use("/api/v1",router)
 const PORT= 2002
 app.listen(PORT,()=>{
