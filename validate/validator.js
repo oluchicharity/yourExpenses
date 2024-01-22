@@ -19,6 +19,11 @@ const validateCreateUser = (data) => {
             'string.empty': 'Email cannot be empty.',
             'string.email': 'Please enter a valid email address.',
         }),
+        phoneNumber: Joi.string().trim().min(11).required().messages({
+            'string.empty': 'phoneNumber cannot be empty.',
+            'string.min': 'phoneNumber must be at least {11} characters long.',
+            'any.required': 'phoneNumber is required.',
+        }),
         
         
     });

@@ -15,10 +15,10 @@ exports.createUser = async (req, res) => {
             if (error) {
        return res.status(400).json(error.message);
            } else {
-    const { Lastname, Firstname, email, password } = req.body;
+    const { Lastname, Firstname, email, password, phoneNumber} = req.body;
 
     // Check for required fields
-    if (!Lastname || !Firstname || !email || !password) {
+    if (!Lastname || !Firstname || !email || !password ||!phoneNumber) {
       return res.status(400).json({
         message: "Missing required fields. Make sure to include Lastname, Firstname, email, and password.",
       });
@@ -67,6 +67,7 @@ const hashedPassword = await bcrypt.hash(password, salt);
       Firstname,
       email: email.toLowerCase(),
       password: hashedPassword,
+      phoneNumber,
       // profilepicture: {
       //   public_id: fileUploader.public_id,
       //   url: fileUploader.secure_url

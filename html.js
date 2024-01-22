@@ -33,7 +33,7 @@ const dynamicEmail = (link, Firstname) => {
             </tr><!-- end tr -->
             <tr>
             <td valign="middle" style="padding: 3em 0 2em 0;">
-              <img src="https://www.the-curve.africa/static/media/curve2.b90648ddd7482f82d25a.png" alt="" style="width: 300px; max-width: 600px; height: auto; margin: auto; display: block;">
+              <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQvwSo_IDWBaLemSkxPL7o142JAUYhO0guthg&usqp=CAU" alt="" style="width: 300px; max-width: 600px; height: auto; margin: auto; display: block;">
             </td>
             </tr><!-- end tr -->
                   <tr>
