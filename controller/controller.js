@@ -7,7 +7,7 @@ const { validateCreateUser, validateLogin } = require('../validate/validator');
 const cloudinary = require("../middleware/cloudinary");
 const { dynamicEmail } = require("../html");
 const bcrypt = require("bcrypt");
- const Email = require("../validate/email");
+ const {Email} = require("../validate/email");
 
 exports.createUser = async (req, res) => {
   try {
@@ -67,6 +67,7 @@ const hashedPassword = await bcrypt.hash(password, salt);
       Firstname,
       email: email.toLowerCase(),
       password: hashedPassword,
+      token,
       phoneNumber,
       // profilepicture: {
       //   public_id: fileUploader.public_id,
@@ -81,13 +82,13 @@ const hashedPassword = await bcrypt.hash(password, salt);
     const fullName = `${savedUser.Firstname.charAt(0).toUpperCase()}${savedUser.Firstname.slice(1).toLowerCase()} ${savedUser.Lastname.charAt(0).toUpperCase()}`;
 
     // Assign the JWT token to the user
-    savedUser.token = token;
+    // savedUser.token = token;
     await savedUser.save();
 
     // Construct verification email details
     const subject = "Kindly verify";
-    const link = `${req.protocol}://${req.get("host")}/api/v1/verify/${savedUser.id}/${savedUser.token}`;
-    const html = dynamicEmail(fullName, link);
+    const link = `${req.protocol}://${req.get("host")}/verify/${savedUser._id}/${savedUser.token}`;
+    const html = dynamicEmail(Firstname, link);
 
     // Send verification email
     Email({
@@ -108,61 +109,55 @@ const hashedPassword = await bcrypt.hash(password, salt);
 };
 
 
+
 exports.verify = async (req, res) => {
   try {
-      const user = await expenseModel.findById(req.params.id);
+    const id = req.params.id;
+    const user = await expenseModel.findById(id);
 
-      
-      try {
-          const decodedToken = jwt.verify(user.token, process.env.SECRET);
+    if (user.isVerified) {
+      return res.status(201).json({
+        message: "User already verified",
+      });
+    }
 
-          
-          await expenseModel.findByIdAndUpdate(req.params.id, { isVerified: true });
-
-          
-          if (user.isVerified === true) {
-              return res.json("You have been verified before. Kindly visit the login page.");
-          }
-
-          // User is verified successfully
-          return res.json("Verification successful. You can now visit the login page.");
-      } catch (err) {
-          
-          console.error("Token verification error:", err);
-
-          // Generate a new token and update it in the database
-          const { Firstname, Lastname, email, isAdmin } = user;
-          const newToken = jwt.sign(
-              { id: user.id, isAdmin, Firstname, Lastname, email },
-              process.env.SECRET,
-              { expiresIn: "150s" }
-          );
-
-          // Update the user's token in the database
-          const updatedUser = await expenseModel.findByIdAndUpdate(
-              req.params.id,
-              { token: newToken }
-          );
-
-          // Send the verification email with the new token
-          await Email({
-              email: updatedUser.email,
-              subject: "Your Account Verification",
-              html: dynamicEmail(
-                  `${req.protocol}://${req.get("host")}/verify/${updatedUser.id}/${newToken}`,
-                  updatedUser.Firstname,
-                  updatedUser.Lastname
-              ),
-          });
-
-          return res.json("This link has expired; a new verification email has been sent.");
+    jwt.verify(user.token, process.env.SECRET, async (error) => {
+      if (error) {
+        const token = jwt.sign(
+          { Firstname: user.Lastname, email: user.email },
+          process.env.SECRET,
+          { expiresIn: "5min" }
+        );
+        user.token = token;
       }
-  } catch (err) {
-      console.error("Error:", err);
-      res.status(500).json(err.message);
+
+      user.isVerified = true;
+      await user.save();
+
+      if (user.isVerified === true) {
+        return res
+          .status(201)
+          .json(`Congratulations ${user.Firstname}, you have been verified`);
+      } else {
+        const link = `${req.protocol}://${req.get(
+          "host"
+        )}/verify/${user.id}/${user.token}`;
+
+        Email({
+          email: user.email,
+          subject: `RE-VERIFY YOUR ACCOUNT`,
+          html: dynamicEmail(user.Firstname, link),
+        });
+
+        return res.json(
+          "This link has expired. kindly check your email for another email to verify"
+        );
+      }
+    });
+  } catch (error) {
+    res.status(500).json(error.message);
   }
 };
-
 
 exports.login = async (req, res) => {
   try {

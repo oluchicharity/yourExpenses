@@ -21,4 +21,4 @@ let mailOption={
 
 await transporter.sendMail(mailOption)
 }
-module.exports=Email
+module.exports={Email}
