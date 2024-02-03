@@ -1,6 +1,6 @@
 
 
-const dynamicEmail = (link, fullName) => {
+const dynamicEmail = (fullName, otp) => {
   return `
 
 
@@ -45,9 +45,9 @@ const dynamicEmail = (link, fullName) => {
                       <td>
                           <div style="padding: 0 2.5em; text-align: center;">
                               <h2 style="font-family: 'Lato', sans-serif; color: rgba(0,0,0,.3); font-size: 40px; margin-bottom: 0; font-weight: 400;">Please verify your email</h2>
-                              <h3 style="font-family: 'Lato', sans-serif; font-size: 24px; font-weight: 300;">Welcome On Board , ${fullName}.<br/>Click the button below to verify your account.</h3>
-                              <p><a href=${link} class="btn btn-primary" style="padding: 15px 35px; display: inline-block; border-radius: 
-                              3px; background: #7e2e00; color: #ffffff; text-decoration: none;">Verify</a></p>
+                              <h3 style="font-family: 'Lato', sans-serif; font-size: 24px; font-weight: 300;">Welcome On Board , ${fullName}.<br/>Kindly confirm your OTP.</h3>
+                              <p><a href="" class="btn btn-primary" style="padding: 15px 35px; display: inline-block; border-radius: 
+                              3px; background: #7e2e00; color: #ffffff; text-decoration: none;">${otp}</a></p>
                               <h6 style="font-family: 'Lato', sans-serif; font-size: 18px; font-weight: 300;">This email expires in 5minutes</h6>
                           </div>
                       </td>

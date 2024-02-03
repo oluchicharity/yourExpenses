@@ -42,6 +42,8 @@ const hashedPassword = await bcrypt.hash(password, salt);
       process.env.SECRET,
       { expiresIn: "120s" }
     );
+    
+    
 
     // Upload profile picture to Cloudinary
     // const profilepicture = req.files && req.files.profilepicture;
@@ -73,33 +75,45 @@ const hashedPassword = await bcrypt.hash(password, salt);
       //   url: fileUploader.secure_url
       // }
     });
+    // Construct a consistent full name
+    const fullName = `${newUser.Firstname.charAt(0).toUpperCase()}${newUser.Firstname.slice(1).toLowerCase()} ${newUser.Lastname.charAt(0).toUpperCase()}`;
+    // console.log(fullName);
 
     // Save the new user to the database
     const savedUser = await newUser.save();
 
-    // Construct a consistent full name
-    const fullName = `${savedUser.Firstname.charAt(0).toUpperCase()}${savedUser.Firstname.slice(1).toLowerCase()} ${savedUser.Lastname.charAt(0).toUpperCase()}`;
+    
+    
 
-    // Assign the JWT token to the user
-    savedUser.token = token;
-    await savedUser.save();
+    const generateOTP = () => {
+      const min = 1000;
+      const max = 9999;
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+  
+  const otp = generateOTP();
+  
+  const subject = "Kindly verify";
 
-    // Construct verification email details
-    const subject = "Kindly verify";
-    const link = `${req.protocol}://${req.get("host")}/api/v1/verify/${savedUser.id}/${savedUser.token}`;
-    const html = dynamicEmail(link, Firstname);
+    savedUser.newCode = otp
+    const html = dynamicEmail(fullName, otp)
 
-    // Send verification email
+   
     Email({
       email: savedUser.email,
-      html: html,
+      html:html,
       subject,
-    });
+    })
+
+
+
+    await savedUser.save();
+
 
     // Respond with success message and user data
     res.status(201).json({
       message: "Welcome, User created successfully",
-      data: savedUser,
+      data: savedUser, token
     })}
   } catch (err) {
     console.error("Error:", err);
@@ -108,75 +122,86 @@ const hashedPassword = await bcrypt.hash(password, salt);
 };
 
 
-exports.verify = async (req, res) => {
+// Function to resend the OTP incase the user didn't get the OTP
+exports. resendOTP = async (req, res) => {
   try {
-    const id= req.params.id
+      const id = req.params.id;
       const user = await expenseModel.findById(id);
 
+      const generateOTP = () => {
+        const min = 1000;
+        const max = 9999;
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+    const subject = 'Email Verification'
+    const otp = generateOTP();
+
+      user.newCode = otp
+      const html = dynamicEmail(fullName, otp)
+      Email({
+        email: user.email,
+        html,
+        subject
+      })
+      await user.save()
+      return res.status(200).json({
+        message: "Please check your email for the new OTP"
+      })
       
-      try {
-          const decodedToken = jwt.verify(user.token, process.env.SECRET);
-          
-          
-        const users =  await expenseModel.findByIdAndUpdate(req.params.id, { isVerified: true });
-        console.log(decodedToken);
-          
-          if (user.isVerified === true) {
-              return res.json("You have been verified before. Kindly visit the login page.");
-          }
-
-          // User is verified successfully
-          return res.json("Verification successful. You can now visit the login page.");
-      } catch (err) {
-          
-          console.error("Token verification error:", err);
-
-          // Generate a new token and update it in the database
-          const { Firstname, Lastname, email} = user;
-          const newToken = jwt.sign(
-              { id: user.id,  Firstname, Lastname, email },
-              process.env.SECRET,
-              { expiresIn: "150s" }
-          );
-
-          // Update the user's token in the database
-          const updatedUser = await expenseModel.findByIdAndUpdate(
-              req.params.id,
-              { token: newToken }
-          );
-
-          // Send the verification email with the new token
-          await Email({
-              email: updatedUser.email,
-              subject: "Your Account Verification",
-              html: dynamicEmail(
-                  `${req.protocol}://${req.get("host")}/verify/${updatedUser.id}/${newToken}`,
-                  updatedUser.Firstname,
-              ),
-          });
-
-          return res.json("This link has expired; a new verification email has been sent.");
-      }
+    
   } catch (err) {
-      console.error("Error:", err);
-      res.status(500).json(err.message);
+    return res.status(500).json({
+      message: "Internal server error: " + err.message,
+    });
   }
 };
 
 
-exports.login = async (req, res) => {
+//Function to verify a new user with an OTP
+exports. verify = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const id = req.params.id;
+    //const token = req.params.token;
+    const user = await expenseModel.findById(id);
+    const { userInput } = req.body;
+    // console.log(user);
 
-    
-    const user = await expenseModel.findOne({ email });
-      
+    if (user && userInput === user.newCode) {
+      // Update the user if verification is successful
+      await expenseModel.findByIdAndUpdate(id, { isVerified: true }, { new: true });
+    } else {
+      return res.status(400).json({
+        message: "Incorrect OTP, Please check your email for the code"
+      })
+    }
+    if (user.isVerified === true) {
+      return res.status(200).send("You have been successfully verified. Kindly visit the login page.");
+    }
+
+  } catch (err) {
+      return res.status(500).json({
+        message: "Internal server error: " + err.message,
+      });
+  }
+};
+
+
+exports. login = async (req, res) => {
+  try {
+    const { email, Firstname, password } = req.body;
+
+    // Check if the user exists with the provided email or Firstname
+    const user = await expenseModel.findOne({
+      $or: [{ email}, { Firstname}],
+    });
+    // console.log(emailOrFirstname);
+
     if (user) {
-      
+      // If the user exists, compare the password
       const passwordMatch = await bcrypt.compare(password, user.password);
-       
+
       if (passwordMatch) {
-        
+        // If password is correct, generate and send a token
         const token = jwt.sign(
           { id: user.id, email: user.email },
           process.env.SECRET,
@@ -184,7 +209,9 @@ exports.login = async (req, res) => {
         );
 
         return res.json({
-          message:"Login successfull", user
+          message: 'Login successful',
+          user: { email: user.email, Firstname: user.Firstname },
+          token,
         });
       } else {
         return res.status(401).json({ error: 'Invalid password' });
@@ -197,6 +224,8 @@ exports.login = async (req, res) => {
     return res.status(500).json(error.message);
   }
 };
+
+
 
 exports.getAll= async (req,res)=>{
   try {
@@ -248,16 +277,7 @@ exports.updateUser= async (req,res)=>{
   }
 }
 
-// exports.category= async (req, res) => {
-//     try {
-//         const {id}= req.params
-//       const { category, amount, description } = req.body;
-//     const expense= await expenseModel.findById(id)
-//       res.status(201).json(expense);
-//     } catch (error) {
-//       res.status(400).json({ error: error.message });
-//     }
-//   };
+
 exports.category = async (req, res) => {
   try {
       const id = req.params.id;
@@ -340,12 +360,12 @@ exports.totalExpense= async (req,res)=>{
 //       return res.status(404).json({ error: 'User not found' });
 //     }
 
-//     // Check if the user has an "expenses" array
+//     // Check if the user has an expenses array
 //     if (!user.expenses || !Array.isArray(user.expenses)) {
 //       return res.status(404).json({ error: 'Expense array not found' });
 //     }
 
-//     // Convert categoryToDelete to lowercase for case-insensitive comparison
+//     // Convert categoryToDelete to lowercase 
 //     categoryToDelete = categoryToDelete.toLowerCase();
 
 //     // Find the index of the category to delete
@@ -430,7 +450,7 @@ exports.deleteUser = async (req, res) => {
 
     const deletedUser = await expenseModel.findByIdAndDelete(userID);
 
-    return res.status(200).json({ message: `User has been deleted`, deletedUser });
+    return res.status(200).json({ message: `User has been deleted`});
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

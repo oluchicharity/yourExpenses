@@ -31,26 +31,26 @@ const validateCreateUser = (data) => {
     return schema.validate(data, { abortEarly: false });
 };
 
-const validateLogin = (data) => {
-    const schema = Joi.object({
-        email: Joi.string().email().required().messages({
-            'string.empty': 'Email cannot be empty.',
-            'string.email': 'Please enter a valid email address.',
-            'any.required': 'Email is required.',
-        }),
-        password: Joi.string().required().messages({
-            'string.empty': 'Password cannot be empty.',
-            'any.required': 'Password is required.',
-        }),
-    });
+// const validateLogin = (data) => {
+//     const schema = Joi.object({
+//         email: Joi.string().email().required().messages({
+//             'string.empty': 'Email cannot be empty.',
+//             'string.email': 'Please enter a valid email address.',
+//             'any.required': 'Email is required.',
+//         }),
+//         password: Joi.string().required().messages({
+//             'string.empty': 'Password cannot be empty.',
+//             'any.required': 'Password is required.',
+//         }),
+//     });
 
-    return schema.validate(data, { abortEarly: false });
-};
+//     return schema.validate(data, { abortEarly: false });
+// };
 
 
 
 
 module.exports = {
-    validateCreateUser,
-    validateLogin,
+    validateCreateUser
+    
 };

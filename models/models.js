@@ -26,10 +26,13 @@ const expenseSchema= new mongoose.Schema({
     // description:{
     //     type:String
     // },
-    // amount:{
-    //     type:Number,
-    //     required:true
-    // },
+    newCode:{
+        type:String
+    },
+
+    userInput:{
+        type:String
+    },
     
     expenses: [
         {
